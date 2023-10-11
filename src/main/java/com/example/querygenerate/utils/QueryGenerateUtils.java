@@ -135,3 +135,83 @@ public class QueryGenerateUtils {
         return query.toString().replace(schema+"."+"dim_ab_testing","(select max(id) as id, game_id, ab_testing_id, ab_testing_value from "+ schema+".dim_ab_testing group by 2,3,4) as");
     }
 }
+/*
+
+--{\"dimFields\":{\"country\":\"dim_country\",\"ads_where\":\"dim_ads_where\",\
+--"app_version\":\"dim_app_version\",\"ads_type\":\"dim_ads_type\",
+--\"ab_testing_id\":\"dim_ab_testing\",\"game_id\":\"dim_game\"},
+--\"dataFields\":[\"account_id\",\"retention_day\",\"time_id\",\"level\",\"install_day\",\"sum_value\",\"created_day\"]}\r\n
+
+--create fact 1
+
+Create Table dwh_test.fact_account_ads_view_temp_1_2023_10_01 as (
+select game_id||'_'||platform as game_id, created_date_str as created_day, country, app_version, ab_testing_variable as ab_testing_id, ab_testing_value,
+retention_day, time_id, install_day, account_id, type as ads_type,level, ad_where as ads_where, count(1) as sum_value
+from dwh_test.api_ads_log_raw_data
+where created_date_str = '2023-10-01'
+group by game_id, platform, created_date_str, country, app_version, ab_testing_variable, ab_testing_value,
+retention_day, time_id, install_day, account_id, ads_type, ads_where, level);
+
+
+--create fact 2
+
+create table dwh_test.fact_account_ads_view_temp_2_2023_10_01 as
+(
+  select d1.id as country, d2.id as ads_where, d3.id as app_version, d4.id as ads_type, d5.id as ab_testing_id, d6.id as game_id, t.account_id, t.retention_day, t.time_id, t.level, t.install_day, t.sum_value, t.created_day
+from dwh_test.fact_account_ads_view_temp_1_2023_10_01 t
+join dwh_test.dim_country d1
+on t.game_id = d1.game_id and t.country = d1.country
+join dwh_test.dim_ads_where d2
+on t.game_id = d2.game_id and t.ads_where = d2.ads_where
+join dwh_test.dim_app_version d3
+on t.game_id = d3.game_id and t.app_version = d3.app_version
+join dwh_test.dim_ads_type d4
+on t.game_id = d4.game_id and t.ads_type = d4.ads_type
+join (select max(id) as id, game_id, ab_testing_id, ab_testing_value from dwh_test.dim_ab_testing group by 2,3,4) as d5
+on t.game_id = d5.game_id and t.ab_testing_id = d5.ab_testing_id and t.ab_testing_value = d5.ab_testing_value
+join dwh_test.dim_game d6
+on t.game_id = d6.game_id
+group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+);
+
+--create fact 3
+
+create table dwh_test.fact_account_ads_view_temp_3_2023_10_01 as(
+select d1.country, d2.ads_where, d3.app_version, d4.ads_type, d5.ab_testing_id, d5.ab_testing_value, d6.game_id, t.account_id, t.retention_day, t.time_id, t.level, t.install_day, t.sum_value, t.created_day
+from dwh_test.fact_account_ads_view_temp_2_2023_10_01 t
+join dwh_test.dim_country d1
+on t.country=d1.id
+join dwh_test.dim_ads_where d2
+on t.ads_where=d2.id
+join dwh_test.dim_app_version d3
+on t.app_version=d3.id
+join dwh_test.dim_ads_type d4
+on t.ads_type=d4.id
+join dwh_test.dim_ab_testing d5
+on t.ab_testing_id=d5.id
+join dwh_test.dim_game d6
+on t.game_id=d6.id
+group by 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+)
+
+--check 3 conditions
+
+select count(*) from dwh_test.fact_account_ads_view_temp_1_2023_10_01
+
+select count(*) from dwh_test.fact_account_ads_view_temp_3_2023_10_01
+
+select count(*) from
+(
+ (
+  SELECT t1.country, t1.ads_where, t1.app_version, t1.ads_type, t1.ab_testing_id, t1.ab_testing_value, t1.game_id, t1.account_id, t1.retention_day, t1.time_id, t1.level,
+  t1.install_day, t1.sum_value, t1.created_day FROM dwh_test.fact_account_ads_view_temp_1_2023_10_01 t1
+ )
+ UNION
+ (
+  SELECT t1.country, t1.ads_where, t1.app_version, t1.ads_type, t1.ab_testing_id, t1.ab_testing_value, t1.game_id, t1.account_id, t1.retention_day, t1.time_id, t1.level,
+  t1.install_day, t1.sum_value, t1.created_day FROM dwh_test.fact_account_ads_view_temp_3_2023_10_01 t1
+ )
+)
+
+
+ */
