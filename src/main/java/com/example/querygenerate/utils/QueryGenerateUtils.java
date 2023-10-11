@@ -132,6 +132,6 @@ public class QueryGenerateUtils {
             if(i<dimFields.size()+dataFields.size()) query.append(", ");
         }
         query.append("\n);");
-        return query.toString().replace(schema+"."+"dim_ab_testing","(select max(id) as id, game_id, ab_testing_id, ab_testing_value from dwh_falcon_1.dim_ab_testing group by 2,3,4) as");
+        return query.toString().replace(schema+"."+"dim_ab_testing","(select max(id) as id, game_id, ab_testing_id, ab_testing_value from "+ schema+".dim_ab_testing group by 2,3,4) as");
     }
 }

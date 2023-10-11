@@ -186,19 +186,19 @@ public class RunnerService {
         long executionTime = endTime - startTime;
         LOGGER.log(Level.INFO, "total runtime dc2: {0}", executionTime);
 
-        startTime = System.currentTimeMillis();
-        for (Thread ra3Thread : ra3Threads) {
-            ra3Thread.start();
-        }
-
-        try {
-            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        endTime = System.currentTimeMillis();
-        executionTime = endTime - startTime;
-        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
+//        startTime = System.currentTimeMillis();
+//        for (Thread ra3Thread : ra3Threads) {
+//            ra3Thread.start();
+//        }
+//
+//        try {
+//            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
+//        endTime = System.currentTimeMillis();
+//        executionTime = endTime - startTime;
+//        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
     }
 
     public static void testRa3PerformanceInRealSchema(){
@@ -239,8 +239,9 @@ public class RunnerService {
 
     public static void main(String[] args) throws SQLException {
         preRun();
-        for(String x:factHashMap.keySet()) {
-            createQuery(x,"dwh_falcon_1","2023-10-08","Ra3");
-        }
+        comparePerformanceBetweenRa3AndDc2();
+//        for(String x:factHashMap.keySet()) {
+//            createQuery(x,"dwh_falcon_1","2023-10-08","Ra3");
+//        }
     }
 }
