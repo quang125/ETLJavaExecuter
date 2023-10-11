@@ -4,9 +4,8 @@ package com.example.querygenerate.service;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,7 +34,7 @@ public class RedshiftService {
 
         config.setMaximumPoolSize(15);
         config.setAutoCommit(true);
-        config.setIdleTimeout(300);
+        config.setIdleTimeout(30000);
 
         hikariDataSource = new HikariDataSource(config);
     }
@@ -134,6 +133,17 @@ public class RedshiftService {
                 statement.executeUpdate();
             }
         }
+    }
+    public List<String> excuteSelect(String query){
+        List<String> answer = new ArrayList<>();
+        try (Connection connection = hikariDataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return answer;
     }
 
 

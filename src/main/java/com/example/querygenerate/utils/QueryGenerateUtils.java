@@ -5,6 +5,8 @@ import com.example.querygenerate.data.Fact;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +16,10 @@ import java.util.Map;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class QueryGenerateUtils {
-    public static String generateQueryForFact1Table(Fact fact, String schema, String day){
+    private static final LocalDate firstBackupDate=LocalDate.parse("2023-08-14");
+    public static String generateQueryForFact1TableForTestSchema(Fact fact, String schema, String day){
+        LocalDate date=LocalDate.parse(day);
+        long dayDiff= ChronoUnit.DAYS.between(firstBackupDate, date);
         // Convert to quoted string format
         String quotedDate = "'" + day + "'";
         String command=fact.getEtlQueryCommand();
@@ -22,6 +27,26 @@ public class QueryGenerateUtils {
         String reformatDay=day.replace("-","_");
         command=command.replace("time_id = ?","created_date_str = "+quotedDate);
         return "Create Table " + schema + "." + fact.getTableName() + "_temp_1_"+reformatDay+" as (" + command + ");";
+    }
+
+    public static String generateQueryForFact1TableForRealSchema(Fact fact, String schema, String day){
+        LocalDate date=LocalDate.parse(day);
+        long dayDiff= ChronoUnit.DAYS.between(firstBackupDate, date);
+        String quotedDate = "'" + day + "'";
+        String command=fact.getEtlQueryCommand();
+        command=command.replace("%s",schema);
+        String reformatDay=day.replace("-","_");
+        LocalDate backupTarget=firstBackupDate.plusDays((dayDiff/7+1)*7);
+        command=command.replace("time_id = ?","created_date_str = "+quotedDate);
+        command=command.replace("raw_data","raw_data_"+backupTarget.toString().replace("-","_"));
+        if(dayDiff%7!=0){
+            return "Create Table " + schema + "." + fact.getTableName() + "_temp_1_"+reformatDay+" as (" + command + ");";
+        }
+        String command1=fact.getEtlQueryCommand();
+        command1=command1.replace("%s",schema);
+        command1=command1.replace("time_id = ?","created_date_str = "+quotedDate);
+        command1=command1.replace("raw_data","raw_data_"+ day.replace("-","_"));
+        return "Create Table " + schema + "." + fact.getTableName() + "_temp_1_"+reformatDay+" as ("+command+"\n union "+command1+")";
     }
     public static List<String> generateQueryForDimTables(List<Dim> dimList, String schema, String rawTable, Map<String,String>fieldsMap){
         List<String>queries=new ArrayList<>();

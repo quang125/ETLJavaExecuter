@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class QueryGenerateApplication {
     public static void main(String[] args) {
+
         SpringApplication.run(QueryGenerateApplication.class, args);
     }
 }
