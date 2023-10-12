@@ -27,11 +27,11 @@ public class TestLoadService {
                         String query3 = "select * from dwh_falcon_1."+fact+" limit 100000";
                         String query4 = "select * from dwh_falcon_1."+fact+" limit 100000";
                         System.out.println(query1);
-                        redshiftRA3Service.excuteSelect(query);
-                        redshiftRA3Service.excuteSelect(query1);
-                        redshiftRA3Service.excuteSelect(query2);
-                        redshiftRA3Service.excuteSelect(query3);
-                        redshiftRA3Service.excuteSelect(query4);
+                        redshiftRA3Service.executeSelect(query);
+                        redshiftRA3Service.executeSelect(query1);
+                        redshiftRA3Service.executeSelect(query2);
+                        redshiftRA3Service.executeSelect(query3);
+                        redshiftRA3Service.executeSelect(query4);
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -63,11 +63,11 @@ public class TestLoadService {
                         String query3 = "select * from dwh_test."+fact+" limit 100000";
                         String query4 = "select * from dwh_test."+fact+" limit 100000";
                         System.out.println(query);
-                        redshiftRA3Service.excuteSelect(query);
-                        redshiftRA3Service.excuteSelect(query1);
-                        redshiftRA3Service.excuteSelect(query2);
-                        redshiftRA3Service.excuteSelect(query3);
-                        redshiftRA3Service.excuteSelect(query4);
+                        redshiftRA3Service.executeSelect(query);
+                        redshiftRA3Service.executeSelect(query1);
+                        redshiftRA3Service.executeSelect(query2);
+                        redshiftRA3Service.executeSelect(query3);
+                        redshiftRA3Service.executeSelect(query4);
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);

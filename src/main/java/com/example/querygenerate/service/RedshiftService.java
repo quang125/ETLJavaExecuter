@@ -6,7 +6,9 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A class used to interact with redshift (could be used for other data sources too, but it hasn't been tested yet).
@@ -134,20 +136,31 @@ public class RedshiftService {
             }
         }
     }
-    public List<String> excuteSelect(String query){
-        List<String> answer = new ArrayList<>();
+    public String executeCountSelect(String sqlCommand) throws SQLException {
         try (Connection connection = hikariDataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+             PreparedStatement statement = connection.prepareStatement(sqlCommand)) {
 
+            ResultSet resultSet = statement.executeQuery();
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+            while (resultSet.next()) {
+                return resultSet.getString(1);
+            }
         }
-        return answer;
+        return null;
     }
-
-
     public void close() {
         hikariDataSource.close();
+    }
+
+    public void executeSelect(String sqlCommand) throws SQLException{
+        try (Connection connection = hikariDataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sqlCommand)) {
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+
+            }
+        }
     }
 }

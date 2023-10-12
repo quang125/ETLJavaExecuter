@@ -24,7 +24,7 @@ public class RunnerService {
     private static final Map<String, Dim> dimHashMap = new HashMap<>();
     private static final Map<String, String> fieldsMap = new HashMap<>();
     private static final Map<String, Fact> factHashMap = new HashMap<>();
-    //private static final RedshiftService redshiftDC2Service = new RedshiftService("jdbc:redshift://new-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "quangnn", "Yvx83kfRmHt42b6kqgM5gzjG6");
+    private static final RedshiftService redshiftDC2Service = new RedshiftService("jdbc:redshift://new-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "quangnn", "Yvx83kfRmHt42b6kqgM5gzjG6");
     //private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "admin", "mj4Yl9O37GuWxSwLz0Wjs3DJ7");
     private static final Random rand = new Random();
     private static final Logger LOGGER = Logger.getLogger(RunnerService.class.getName());
@@ -73,11 +73,12 @@ public class RunnerService {
         if(schema.equals(DWH_TEST)) fact1TableQuery= QueryGenerateUtils.generateQueryForFact1TableForTestSchema(fact, schema, day);
         else fact1TableQuery=QueryGenerateUtils.generateQueryForFact1TableForRealSchema(fact, schema, day);
         String fact2TableQuery = QueryGenerateUtils.generateQueryForFact2Table(fact, schema, dimHashMap, day);
-        String fact3TableQuery =QueryGenerateUtils.generateQueryForFact3Table(fact,schema,dimHashMap,day);
         List<String> dimQueries = QueryGenerateUtils.generateQueryForDimTables(dims, schema, fact.getRawTable(), fieldsMap);
-//        System.out.println(fact1TableQuery);
-//        System.out.println(fact2TableQuery);
-        System.out.println(fact3TableQuery);
+        System.out.println(fact1TableQuery);
+        redshiftDC2Service.executeUpdate(fact1TableQuery);
+        //for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
+        System.out.println("2");
+        redshiftDC2Service.executeUpdate(fact2TableQuery);
 //        if (redshiftService.equals("Ra3")) {
 //            redshiftRA3Service.executeUpdate(fact1TableQuery);
 //            for (String query : dimQueries){
@@ -188,19 +189,19 @@ public class RunnerService {
         long executionTime = endTime - startTime;
         LOGGER.log(Level.INFO, "total runtime dc2: {0}", executionTime);
 
-//        startTime = System.currentTimeMillis();
-//        for (Thread ra3Thread : ra3Threads) {
-//            ra3Thread.start();
-//        }
-//
-//        try {
-//            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
-//        endTime = System.currentTimeMillis();
-//        executionTime = endTime - startTime;
-//        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
+        startTime = System.currentTimeMillis();
+        for (Thread ra3Thread : ra3Threads) {
+            ra3Thread.start();
+        }
+
+        try {
+            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        endTime = System.currentTimeMillis();
+        executionTime = endTime - startTime;
+        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
     }
 
     public static void testRa3PerformanceInRealSchema(){
@@ -241,6 +242,6 @@ public class RunnerService {
 
     public static void main(String[] args) throws SQLException {
         preRun();
-        createQuery("fact_resource_log","dwh_test","2023-10-01","Dc2");
+        createQuery(sc.next(), sc.next(),sc.next(),sc.next());
     }
 }

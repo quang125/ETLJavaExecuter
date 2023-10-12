@@ -126,27 +126,25 @@ public class QueryGenerateUtils {
             }
             count+=1;
         }
-        query.append("\ngroup by ");
-        for(int i=1;i<=dimFields.size()+dataFields.size();i++){
-            query.append(i);
-            if(i<dimFields.size()+dataFields.size()) query.append(", ");
-        }
         query.append("\n);");
         return query.toString().replace(schema+"."+"dim_ab_testing","(select max(id) as id, game_id, ab_testing_id, ab_testing_value from "+ schema+".dim_ab_testing group by 2,3,4) as");
     }
     public static String generateQueryForFact3Table(Fact fact, String schema, Map<String, Dim>dimMap, String day){
         StringBuilder query= new StringBuilder("create table " + schema + "." + fact.getTableName() + "_temp_3_" + day.replace("-", "_") + " as\n(\n  select ");
         List<String>dataFields=fact.getEtlMap().getDataFields();
+        int c=0;
         for(int i=0;i<dataFields.size();i++){
             query.append("t.").append(dataFields.get(i));
             query.append(", ");
+            c+=1;
         }
         Map<String,String>dimFields=fact.getEtlMap().getDimFields();
         int count=1;
-        int c=0;
+
         for(Map.Entry<String,String> field:dimFields.entrySet()){
             Dim dim=dimMap.get(field.getValue());
             for(int i=0;i<dim.getColumnList().size();i++){
+                if(dim.getColumnList().get(i).equals("game_id")&&!dim.getTableName().equals("dim_game")) continue;
                 query.append("d").append(count).append(".").append(dim.getColumnList().get(i));
                 query.append(", ");
                 c+=1;
@@ -158,21 +156,46 @@ public class QueryGenerateUtils {
         query.append("\nfrom ").append(schema).append(".").append(fact.getTableName()).append("_temp_2_").append(day.replace("-", "_")).append(" t");
         for(String field:dimFields.keySet()){
             query.append("\njoin ").append(schema).append(".").append(dimFields.get(field)).append(" d").append(count).append("\non ");
-            query.append("d").append(count).append(".id = t.id").append(", ");
+            query.append("d").append(count).append(".id = t.").append(field);
             count+=1;
         }
-        query.delete(query.length()-2, query.length()-2);
         count=1;
-        query.append("\ngroup by ");
-        for(int i=1;i<=c;i++){
-            query.append(i);
-            if(i<c) query.append(", ");
-        }
         query.append("\n);");
         return query.toString();
     }
-    public static String generateSelectCountQuery(String schema, String table){
+    public static String generateSelectCountQueryForFactTable(String schema, String table){
         return "Select count(*) from "+schema+"."+table;
+    }
+    public static List<String> generateCompareCountQuery(Fact fact, String schema, Map<String, Dim>dimMap, String day){
+        List<String>queries=new ArrayList<>();
+        StringBuilder query= new StringBuilder("select count(*) from (\n(\n" );
+        StringBuilder select = new StringBuilder("select distinct ");
+        List<String>dataFields=fact.getEtlMap().getDataFields();
+        for(int i=0;i<dataFields.size();i++){
+            select.append("t.").append(dataFields.get(i));
+            select.append(", ");
+        }
+        Map<String,String>dimFields=fact.getEtlMap().getDimFields();
+
+        for(Map.Entry<String,String> field:dimFields.entrySet()){
+            Dim dim=dimMap.get(field.getValue());
+            for(int i=0;i<dim.getColumnList().size();i++){
+                if(dim.getColumnList().get(i).equals("game_id")&&!dim.getTableName().equals("dim_game")) continue;
+                select.append("t").append(".").append(dim.getColumnList().get(i));
+                select.append(", ");
+            }
+        }
+        select.delete(select.length()-2, select.length()-1);
+        select.append("\nfrom ").append(schema).append(".").append(fact.getTableName()).append("_temp_1_").append(day.replace("-", "_")).append(" t\n");
+        queries.add(new StringBuilder("Select count(*) from (").append(select).append(")AS subquery;").toString());
+        query.append(select);
+        query.append(")\n  union\n(");
+        query.append(select.toString().replace("_temp_1","_temp_3"));
+        query.append(")\n)");
+        queries.add(query.toString());
+        queries.add(new StringBuilder("Select count(*) from (").append(select).append(") AS subquery;").toString().replace("_temp_1","_temp_3"));
+        System.out.println(query);
+        return queries;
     }
 }
 
