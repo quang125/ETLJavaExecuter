@@ -134,7 +134,48 @@ public class QueryGenerateUtils {
         query.append("\n);");
         return query.toString().replace(schema+"."+"dim_ab_testing","(select max(id) as id, game_id, ab_testing_id, ab_testing_value from "+ schema+".dim_ab_testing group by 2,3,4) as");
     }
+    public static String generateQueryForFact3Table(Fact fact, String schema, Map<String, Dim>dimMap, String day){
+        StringBuilder query= new StringBuilder("create table " + schema + "." + fact.getTableName() + "_temp_3_" + day.replace("-", "_") + " as\n(\n  select ");
+        List<String>dataFields=fact.getEtlMap().getDataFields();
+        for(int i=0;i<dataFields.size();i++){
+            query.append("t.").append(dataFields.get(i));
+            query.append(", ");
+        }
+        Map<String,String>dimFields=fact.getEtlMap().getDimFields();
+        int count=1;
+        int c=0;
+        for(Map.Entry<String,String> field:dimFields.entrySet()){
+            Dim dim=dimMap.get(field.getValue());
+            for(int i=0;i<dim.getColumnList().size();i++){
+                query.append("d").append(count).append(".").append(dim.getColumnList().get(i));
+                query.append(", ");
+                c+=1;
+            }
+            count+=1;
+        }
+        query.delete(query.length()-2, query.length()-1);
+        count=1;
+        query.append("\nfrom ").append(schema).append(".").append(fact.getTableName()).append("_temp_2_").append(day.replace("-", "_")).append(" t");
+        for(String field:dimFields.keySet()){
+            query.append("\njoin ").append(schema).append(".").append(dimFields.get(field)).append(" d").append(count).append("\non ");
+            query.append("d").append(count).append(".id = t.id").append(", ");
+            count+=1;
+        }
+        query.delete(query.length()-2, query.length()-2);
+        count=1;
+        query.append("\ngroup by ");
+        for(int i=1;i<=c;i++){
+            query.append(i);
+            if(i<c) query.append(", ");
+        }
+        query.append("\n);");
+        return query.toString();
+    }
+    public static String generateSelectCountQuery(String schema, String table){
+        return "Select count(*) from "+schema+"."+table;
+    }
 }
+
 /*
 
 --{\"dimFields\":{\"country\":\"dim_country\",\"ads_where\":\"dim_ads_where\",\

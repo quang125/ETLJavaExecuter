@@ -1,10 +1,13 @@
 package com.example.querygenerate.service;
+import org.springframework.stereotype.Service;
+
 import java.util.*;
 
 
 /**
  * @author QuangNN
  */
+@Service
 public class TestLoadService {
     private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "admin", "mj4Yl9O37GuWxSwLz0Wjs3DJ7");
 

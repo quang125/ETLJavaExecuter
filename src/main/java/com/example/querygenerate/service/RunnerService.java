@@ -24,8 +24,8 @@ public class RunnerService {
     private static final Map<String, Dim> dimHashMap = new HashMap<>();
     private static final Map<String, String> fieldsMap = new HashMap<>();
     private static final Map<String, Fact> factHashMap = new HashMap<>();
-    private static final RedshiftService redshiftDC2Service = new RedshiftService("jdbc:redshift://new-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "quangnn", "Yvx83kfRmHt42b6kqgM5gzjG6");
-    private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "admin", "mj4Yl9O37GuWxSwLz0Wjs3DJ7");
+    //private static final RedshiftService redshiftDC2Service = new RedshiftService("jdbc:redshift://new-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "quangnn", "Yvx83kfRmHt42b6kqgM5gzjG6");
+    //private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "admin", "mj4Yl9O37GuWxSwLz0Wjs3DJ7");
     private static final Random rand = new Random();
     private static final Logger LOGGER = Logger.getLogger(RunnerService.class.getName());
     private static final String DWH_TEST="dwh_test";
@@ -73,32 +73,34 @@ public class RunnerService {
         if(schema.equals(DWH_TEST)) fact1TableQuery= QueryGenerateUtils.generateQueryForFact1TableForTestSchema(fact, schema, day);
         else fact1TableQuery=QueryGenerateUtils.generateQueryForFact1TableForRealSchema(fact, schema, day);
         String fact2TableQuery = QueryGenerateUtils.generateQueryForFact2Table(fact, schema, dimHashMap, day);
+        String fact3TableQuery =QueryGenerateUtils.generateQueryForFact3Table(fact,schema,dimHashMap,day);
         List<String> dimQueries = QueryGenerateUtils.generateQueryForDimTables(dims, schema, fact.getRawTable(), fieldsMap);
-        System.out.println(fact1TableQuery);
-        System.out.println(fact2TableQuery);
-        if (redshiftService.equals("Ra3")) {
-            redshiftRA3Service.executeUpdate(fact1TableQuery);
-            for (String query : dimQueries){
-                redshiftRA3Service.executeUpdate(query);
-            }
-            redshiftRA3Service.executeUpdate(fact2TableQuery);
-
+//        System.out.println(fact1TableQuery);
+//        System.out.println(fact2TableQuery);
+        System.out.println(fact3TableQuery);
+//        if (redshiftService.equals("Ra3")) {
+//            redshiftRA3Service.executeUpdate(fact1TableQuery);
+//            for (String query : dimQueries){
+//                redshiftRA3Service.executeUpdate(query);
+//            }
+//            redshiftRA3Service.executeUpdate(fact2TableQuery);
+//
 //            String q = "drop table " + schema + "." + factString + "_temp_1_" + day.replace("-", "_");
 //            redshiftRA3Service.executeUpdate(q);
 //            String j = "drop table " + schema + "." + factString + "_temp_2_" + day.replace("-", "_");
 //            redshiftRA3Service.executeUpdate(j);
-        }
+//        }
 
 
-         else {
-            redshiftDC2Service.executeUpdate(fact1TableQuery);
-            for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
-            redshiftDC2Service.executeUpdate(fact2TableQuery);
+//         else {
+//            redshiftDC2Service.executeUpdate(fact1TableQuery);
+//            for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
+//            redshiftDC2Service.executeUpdate(fact2TableQuery);
 //            String q="drop table dwh_test."+factString+"_temp_1_"+day.replace("-","_");
 //            redshiftDC2Service.executeUpdate(q);
 //            String j="drop table dwh_test."+factString+"_temp_2_"+day.replace("-","_");
 //            redshiftDC2Service.executeUpdate(j);
-        }
+   //     }
     }
     public static void boastLoadRa3(){
 
@@ -239,9 +241,6 @@ public class RunnerService {
 
     public static void main(String[] args) throws SQLException {
         preRun();
-        comparePerformanceBetweenRa3AndDc2();
-//        for(String x:factHashMap.keySet()) {
-//            createQuery(x,"dwh_falcon_1","2023-10-08","Ra3");
-//        }
+        createQuery("fact_resource_log","dwh_test","2023-10-01","Dc2");
     }
 }
