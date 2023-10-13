@@ -11,8 +11,9 @@ public class Dim {
     private String keyColumn;
     private String id;
     private String tableConfigName;
-    public List<String> getColumnList(){
-        if(this.keyColumn==null) return null;
+
+    public List<String> getColumnList() {
+        if (this.keyColumn == null) return null;
         return new Gson().fromJson(this.keyColumn, List.class);
     }
 }

@@ -68,7 +68,7 @@ public class RedshiftService {
     }
 
     /**
-     Check if the table exist in the db by testing querying "select  from {the table}" -> if no exception is thrown then the table exist.
+     * Check if the table exist in the db by testing querying "select  from {the table}" -> if no exception is thrown then the table exist.
      * This function does not guarantee the correctness, since the sqlException con be various.
      *
      * @param tableName Name of the table checking.
@@ -136,6 +136,7 @@ public class RedshiftService {
             }
         }
     }
+
     public String executeCountSelect(String sqlCommand) throws SQLException {
         try (Connection connection = hikariDataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sqlCommand)) {
@@ -148,11 +149,12 @@ public class RedshiftService {
         }
         return null;
     }
+
     public void close() {
         hikariDataSource.close();
     }
 
-    public void executeSelect(String sqlCommand) throws SQLException{
+    public void executeSelect(String sqlCommand) throws SQLException {
         try (Connection connection = hikariDataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sqlCommand)) {
 

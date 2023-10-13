@@ -11,7 +11,7 @@ import java.util.Map;
  * @author QuangNN
  */
 @Data
-public class Fact{
+public class Fact {
     private String tableName;
     private int timeStep;
     private int backupType;
@@ -26,7 +26,7 @@ public class Fact{
     private String tableConfigName;
     private String createdDateStr;
 
-    public EtlMap getEtlMap(){
-        return new Gson().fromJson(this.etlMap,EtlMap.class);
+    public EtlMap getEtlMap() {
+        return new Gson().fromJson(this.etlMap, EtlMap.class);
     }
 }
