@@ -47,8 +47,8 @@ public class RunnerService {
         }
     }
 
-    public static void createQuery(String factString, String schema, String day, String redshiftService) throws SQLException {
-        System.out.println(factString+" "+day);
+    public void createQuery(String factString, String schema, String day, String redshiftService) throws SQLException {
+        //System.out.println(factString+" "+day);
         Fact fact = factHashMap.get(factString);
         List<Dim> dims = new ArrayList<>();
         for (String s : fact.getEtlMap().getDimFields().values()) {
@@ -75,10 +75,10 @@ public class RunnerService {
         String fact2TableQuery = QueryGenerateUtils.generateQueryForFact2Table(fact, schema, dimHashMap, day);
         List<String> dimQueries = QueryGenerateUtils.generateQueryForDimTables(dims, schema, fact.getRawTable(), fieldsMap);
         System.out.println(fact1TableQuery);
-        redshiftDC2Service.executeUpdate(fact1TableQuery);
-        //for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
-        System.out.println("2");
-        redshiftDC2Service.executeUpdate(fact2TableQuery);
+        //redshiftDC2Service.executeUpdate(fact1TableQuery);
+        for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
+        System.out.println(fact2TableQuery);
+        //redshiftDC2Service.executeUpdate(fact2TableQuery);
 //        if (redshiftService.equals("Ra3")) {
 //            redshiftRA3Service.executeUpdate(fact1TableQuery);
 //            for (String query : dimQueries){
@@ -103,145 +103,148 @@ public class RunnerService {
 //            redshiftDC2Service.executeUpdate(j);
    //     }
     }
-    public static void boastLoadRa3(){
+//    public static void boastLoadRa3(){
+//
+//        Map<String, List<String>> days = new HashMap<>();
+//        days.put("fact_ads_view", Arrays.asList("2023-09-25", "2023-09-26", "2023-09-27", "2023-09-28", "2023-09-29", "2023-09-30", "2023-10-01"));
+//        days.put("fact_session_time", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+//        days.put("fact_resource_log", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+//        days.put("fact_action", Arrays.asList("2023-10-01", "2023-10-03", "2023-10-02"));
+//        days.put("fact_retention", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+//        days.put("fact_account_ads_view", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+//        List<Thread> ra3Threads = new ArrayList<>();
+//        Set<String> visited = new HashSet<>();
+//        for (int i = 0; i < 20; i++) {
+//            String fact = factTable.get(rand.nextInt(factTable.size()));
+//            List<String> factDay = days.get(fact);
+//            String day = factDay.get(rand.nextInt(factDay.size()));
+//            if (visited.contains(fact + " " + day)) continue;
+//            visited.add(fact + " " + day);
+//            ra3Threads.add(new Thread(() -> {
+//                try {
+//                    while(true) {
+//                        createQuery(fact, DWH_TEST, day, "Ra3");
+//                    }
+//                } catch (SQLException e) {
+//                    throw new RedshiftException(e.getMessage());
+//                }
+//            }));
+//        }
+//        long startTime = System.currentTimeMillis();
+//        for (Thread ra3Thread : ra3Threads) {
+//            ra3Thread.start();
+//        }
+//        try {
+//            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
+//        long endTime = System.currentTimeMillis();
+//        long executionTime = endTime - startTime;
+//        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
+//    }
 
-        Map<String, List<String>> days = new HashMap<>();
-        days.put("fact_ads_view", Arrays.asList("2023-09-25", "2023-09-26", "2023-09-27", "2023-09-28", "2023-09-29", "2023-09-30", "2023-10-01"));
-        days.put("fact_session_time", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
-        days.put("fact_resource_log", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
-        days.put("fact_action", Arrays.asList("2023-10-01", "2023-10-03", "2023-10-02"));
-        days.put("fact_retention", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
-        days.put("fact_account_ads_view", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
-        List<Thread> ra3Threads = new ArrayList<>();
-        Set<String> visited = new HashSet<>();
-        for (int i = 0; i < 20; i++) {
-            String fact = factTable.get(rand.nextInt(factTable.size()));
-            List<String> factDay = days.get(fact);
-            String day = factDay.get(rand.nextInt(factDay.size()));
-            if (visited.contains(fact + " " + day)) continue;
-            visited.add(fact + " " + day);
-            ra3Threads.add(new Thread(() -> {
-                try {
-                    while(true) {
-                        createQuery(fact, DWH_TEST, day, "Ra3");
-                    }
-                } catch (SQLException e) {
-                    throw new RedshiftException(e.getMessage());
-                }
-            }));
-        }
-        long startTime = System.currentTimeMillis();
-        for (Thread ra3Thread : ra3Threads) {
-            ra3Thread.start();
-        }
-        try {
-            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        long endTime = System.currentTimeMillis();
-        long executionTime = endTime - startTime;
-        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
-    }
+//    public static void comparePerformanceBetweenRa3AndDc2() {
+//        Map<String, List<String>> days = new HashMap<>();
+//        days.put("fact_ads_view", Arrays.asList("2023-09-25", "2023-09-26", "2023-09-27", "2023-09-28", "2023-09-29", "2023-09-30", "2023-10-01"));
+//        days.put("fact_session_time", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+//        days.put("fact_resource_log", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+//        days.put("fact_action", Arrays.asList("2023-10-01", "2023-10-03", "2023-10-02"));
+//        days.put("fact_retention", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+//        days.put("fact_account_ads_view", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+//        List<Thread> dc2Threads = new ArrayList<>();
+//        List<Thread> ra3Threads = new ArrayList<>();
+//        Set<String> visited = new HashSet<>();
+//        for (int i = 0; i < 15; i++) {
+//            String fact = factTable.get(rand.nextInt(factTable.size()));
+//            List<String> factDay = days.get(fact);
+//            String day = factDay.get(rand.nextInt(factDay.size()));
+//            if (visited.contains(fact + " " + day)) continue;
+//            visited.add(fact + " " + day);
+//            dc2Threads.add(new Thread(() -> {
+//                try {
+//                    createQuery(fact, DWH_TEST, day, "Dc2");
+//                } catch (SQLException e) {
+//                    throw new RedshiftException(e.getMessage());
+//                }
+//            }));
+//            ra3Threads.add(new Thread(() -> {
+//                try {
+//                    createQuery(fact, DWH_TEST, day, "Ra3");
+//                } catch (SQLException e) {
+//                    throw new RedshiftException(e.getMessage());
+//                }
+//            }));
+//        }
+//        long startTime = System.currentTimeMillis();
+//        for (Thread dc2Thread : dc2Threads) {
+//            dc2Thread.start();
+//        }
+//        try {
+//            for (Thread dc2Thread : dc2Threads) dc2Thread.join();
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
+//        long endTime = System.currentTimeMillis();
+//        long executionTime = endTime - startTime;
+//        LOGGER.log(Level.INFO, "total runtime dc2: {0}", executionTime);
+//
+//        startTime = System.currentTimeMillis();
+//        for (Thread ra3Thread : ra3Threads) {
+//            ra3Thread.start();
+//        }
+//
+//        try {
+//            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
+//        endTime = System.currentTimeMillis();
+//        executionTime = endTime - startTime;
+//        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
+//    }
 
-    public static void comparePerformanceBetweenRa3AndDc2() {
-        Map<String, List<String>> days = new HashMap<>();
-        days.put("fact_ads_view", Arrays.asList("2023-09-25", "2023-09-26", "2023-09-27", "2023-09-28", "2023-09-29", "2023-09-30", "2023-10-01"));
-        days.put("fact_session_time", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
-        days.put("fact_resource_log", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
-        days.put("fact_action", Arrays.asList("2023-10-01", "2023-10-03", "2023-10-02"));
-        days.put("fact_retention", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
-        days.put("fact_account_ads_view", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
-        List<Thread> dc2Threads = new ArrayList<>();
-        List<Thread> ra3Threads = new ArrayList<>();
-        Set<String> visited = new HashSet<>();
-        for (int i = 0; i < 15; i++) {
-            String fact = factTable.get(rand.nextInt(factTable.size()));
-            List<String> factDay = days.get(fact);
-            String day = factDay.get(rand.nextInt(factDay.size()));
-            if (visited.contains(fact + " " + day)) continue;
-            visited.add(fact + " " + day);
-            dc2Threads.add(new Thread(() -> {
-                try {
-                    createQuery(fact, DWH_TEST, day, "Dc2");
-                } catch (SQLException e) {
-                    throw new RedshiftException(e.getMessage());
-                }
-            }));
-            ra3Threads.add(new Thread(() -> {
-                try {
-                    createQuery(fact, DWH_TEST, day, "Ra3");
-                } catch (SQLException e) {
-                    throw new RedshiftException(e.getMessage());
-                }
-            }));
-        }
-        long startTime = System.currentTimeMillis();
-        for (Thread dc2Thread : dc2Threads) {
-            dc2Thread.start();
-        }
-        try {
-            for (Thread dc2Thread : dc2Threads) dc2Thread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        long endTime = System.currentTimeMillis();
-        long executionTime = endTime - startTime;
-        LOGGER.log(Level.INFO, "total runtime dc2: {0}", executionTime);
+//    public static void testRa3PerformanceInRealSchema(){
+//        Map<String, List<String>> days = new HashMap<>();
+//        days.put("fact_resource_log", Arrays.asList("2023-08-13", "2023-08-15", "2023-09-27", "2023-09-28", "2023-09-29", "2023-09-30", "2023-10-01", "2023-10-05",
+//                "2023-09-24","2023-09-20", "2023-09-09","2023-08-11","2023-08-12","2023-08-16","2023-08-17","2023-08-18","2023-08-19","2023-08-20",
+//                "2023-08-27","2023-08-23","2023-08-26","2023-09-26","2023-08-10","2023-08-09"));
+//        List<Thread> ra3Threads = new ArrayList<>();
+//        Set<String> visited = new HashSet<>();
+//        List<String[]>u=new ArrayList<>();
+//        for (int i = 0; i < 10; i++) {
+//            List<String> factDay = days.get("fact_resource_log");
+//            String day = factDay.get(rand.nextInt(factDay.size()));
+//            if (visited.contains("fact_resource_log" + " " + day)) continue;
+//            visited.add("fact_resource_log" + " " + day);
+//            ra3Threads.add(new Thread(() -> {
+//                try {
+//                    createQuery("fact_resource_log", "dwh_falcon_1", day, "Ra3");
+//                } catch (SQLException e) {
+//                    throw new RuntimeException(e.getMessage());
+//                }
+//            }));
+//
+//        }
+//        long startTime = System.currentTimeMillis();
+//        for (Thread ra3Thread : ra3Threads) {
+//            ra3Thread.start();
+//        }
+//        try {
+//            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
+//        long endTime = System.currentTimeMillis();
+//        long executionTime = endTime - startTime;
+//        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
+//    }
 
-        startTime = System.currentTimeMillis();
-        for (Thread ra3Thread : ra3Threads) {
-            ra3Thread.start();
-        }
-
-        try {
-            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        endTime = System.currentTimeMillis();
-        executionTime = endTime - startTime;
-        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
-    }
-
-    public static void testRa3PerformanceInRealSchema(){
-        Map<String, List<String>> days = new HashMap<>();
-        days.put("fact_resource_log", Arrays.asList("2023-08-13", "2023-08-15", "2023-09-27", "2023-09-28", "2023-09-29", "2023-09-30", "2023-10-01", "2023-10-05",
-                "2023-09-24","2023-09-20", "2023-09-09","2023-08-11","2023-08-12","2023-08-16","2023-08-17","2023-08-18","2023-08-19","2023-08-20",
-                "2023-08-27","2023-08-23","2023-08-26","2023-09-26","2023-08-10","2023-08-09"));
-        List<Thread> ra3Threads = new ArrayList<>();
-        Set<String> visited = new HashSet<>();
-        List<String[]>u=new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            List<String> factDay = days.get("fact_resource_log");
-            String day = factDay.get(rand.nextInt(factDay.size()));
-            if (visited.contains("fact_resource_log" + " " + day)) continue;
-            visited.add("fact_resource_log" + " " + day);
-            ra3Threads.add(new Thread(() -> {
-                try {
-                    createQuery("fact_resource_log", "dwh_falcon_1", day, "Ra3");
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.getMessage());
-                }
-            }));
-
-        }
-        long startTime = System.currentTimeMillis();
-        for (Thread ra3Thread : ra3Threads) {
-            ra3Thread.start();
-        }
-        try {
-            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        long endTime = System.currentTimeMillis();
-        long executionTime = endTime - startTime;
-        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
-    }
-
-    public static void main(String[] args) throws SQLException {
-        preRun();
-        createQuery(sc.next(), sc.next(),sc.next(),sc.next());
+//    public static void main(String[] args) throws SQLException {
+//        preRun();
+//        createQuery(sc.next(), sc.next(),sc.next(),sc.next());
+//    }
+    public void print(){
+        System.out.println("Runner run");
     }
 }

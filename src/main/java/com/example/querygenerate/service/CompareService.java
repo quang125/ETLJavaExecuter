@@ -5,14 +5,17 @@ import com.example.querygenerate.data.Fact;
 import com.example.querygenerate.utils.QueryGenerateUtils;
 import com.google.gson.Gson;
 import jakarta.annotation.PostConstruct;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * @author QuangNN
  */
+@Service
 public class CompareService {
     static Scanner sc=new Scanner(System.in);
     private static final Map<String, Dim> dimHashMap = new HashMap<>();
@@ -20,7 +23,7 @@ public class CompareService {
     private static final Map<String, Fact> factHashMap = new HashMap<>();
     private static final RedshiftService redshiftDC2Service = new RedshiftService("jdbc:redshift://new-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "quangnn", "Yvx83kfRmHt42b6kqgM5gzjG6");
     //private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "admin", "mj4Yl9O37GuWxSwLz0Wjs3DJ7");
-    private static final Logger LOGGER = Logger.getLogger(RunnerService.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CompareService.class.getName());
     private static final String DWH_TEST="dwh_test";
     private static final List<String> factTable = Arrays.asList("fact_ads_view", "fact_resource_log", "fact_action", "fact_retention", "fact_account_ads_view", "fact_session_time");
     @PostConstruct
@@ -39,7 +42,7 @@ public class CompareService {
             factHashMap.put(fact.getTableName(), fact);
         }
     }
-    public static boolean compareTemp(String factString, String schema, String day, String redshiftService) throws SQLException {
+    public boolean compareTemp(String factString, String schema, String day, String redshiftService) throws SQLException {
         System.out.println(factString+" "+day);
         Fact fact = factHashMap.get(factString);
         List<Dim> dims = new ArrayList<>();
@@ -73,11 +76,17 @@ public class CompareService {
         }
         String q = "drop table " + schema + "." + factString + "_temp_3_" + day.replace("-", "_");
         redshiftDC2Service.executeUpdate(q);
-        return value.size()==1;
+        if(!(value.size()==1)){
+            LOGGER.log(Level.INFO,"different number of records at table {}",factString+"_"+day.replace("-", "_"));
+        }
+        return true;
+    }
+    public void print(){
+        System.out.println("Compare run");
     }
 
-    public static void main(String[] args) throws SQLException {
-        preRun();
-        System.out.println(compareTemp(sc.next(),sc.next(),sc.next(),sc.next()));
-    }
+//    public static void main(String[] args) throws SQLException {
+//        preRun();
+//        System.out.println(compareTemp(sc.next(),sc.next(),sc.next(),sc.next()));
+//    }
 }

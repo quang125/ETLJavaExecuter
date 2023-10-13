@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author QuangNN
@@ -18,8 +16,6 @@ import java.util.Map;
 public class QueryGenerateUtils {
     private static final LocalDate firstBackupDate=LocalDate.parse("2023-08-14");
     public static String generateQueryForFact1TableForTestSchema(Fact fact, String schema, String day){
-        LocalDate date=LocalDate.parse(day);
-        long dayDiff= ChronoUnit.DAYS.between(firstBackupDate, date);
         // Convert to quoted string format
         String quotedDate = "'" + day + "'";
         String command=fact.getEtlQueryCommand();
@@ -140,11 +136,13 @@ public class QueryGenerateUtils {
         }
         Map<String,String>dimFields=fact.getEtlMap().getDimFields();
         int count=1;
-
+        Set<String> colums=new HashSet<>();
         for(Map.Entry<String,String> field:dimFields.entrySet()){
             Dim dim=dimMap.get(field.getValue());
             for(int i=0;i<dim.getColumnList().size();i++){
                 if(dim.getColumnList().get(i).equals("game_id")&&!dim.getTableName().equals("dim_game")) continue;
+                if(colums.contains(dim.getColumnList().get(i))) continue;
+                colums.add(dim.getColumnList().get(i));
                 query.append("d").append(count).append(".").append(dim.getColumnList().get(i));
                 query.append(", ");
                 c+=1;
