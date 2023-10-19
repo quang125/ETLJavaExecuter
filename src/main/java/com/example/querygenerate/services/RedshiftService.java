@@ -1,14 +1,11 @@
-package com.example.querygenerate.service;
+package com.example.querygenerate.services;
 
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A class used to interact with redshift (could be used for other data sources too, but it hasn't been tested yet).

@@ -1,4 +1,4 @@
-package com.example.querygenerate.service;
+package com.example.querygenerate.services;
 
 import com.example.querygenerate.data.Dim;
 import com.example.querygenerate.data.Fact;
@@ -24,15 +24,13 @@ public class RunnerService {
     private static final Map<String, String> fieldsMap = new HashMap<>();
     private static final Map<String, Fact> factHashMap = new HashMap<>();
     private static final RedshiftService redshiftDC2Service = new RedshiftService("jdbc:redshift://new-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "quangnn", "Yvx83kfRmHt42b6kqgM5gzjG6");
-    private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dc2-cluster-2.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "admin", "mj4Yl9O37GuWxSwLz0Wjs3DJ7");
     private static final Random rand = new Random();
     private static final Logger LOGGER = Logger.getLogger(RunnerService.class.getName());
     private static final String DWH_TEST = "dwh_test";
     private static final List<String> factTable = Arrays.asList("fact_ads_view", "fact_resource_log", "fact_action", "fact_retention", "fact_account_ads_view", "fact_session_time");
-    static Scanner sc = new Scanner(System.in);
 
     @PostConstruct
-    public static void preRun() {
+    public void preRun(){
         Gson gson = new Gson();
         String jsonDim = "[{\"tableName\":\"dim_country\",\"keyColumn\":\"[\\\"game_id\\\",\\\"country\\\"]\",\"id\":\"6361f9800b35c0bf3d57e709\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_app_version\",\"keyColumn\":\"[\\\"game_id\\\",\\\"app_version\\\"]\",\"id\":\"6361f9800b35c0bf3d57e708\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_ab_testing\",\"keyColumn\":\"[\\\"game_id\\\",\\\"ab_testing_id\\\",\\\"ab_testing_value\\\"]\",\"id\":\"6361f9800b35c0bf3d57e705\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_property\",\"keyColumn\":\"[\\\"game_id\\\",\\\"p_name\\\"]\",\"id\":\"641bbdcf1e65304e34dc009b\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_game\",\"keyColumn\":\"[\\\"game_id\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70a\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_inapp_where\",\"keyColumn\":\"[\\\"game_id\\\",\\\"inapp_where\\\"]\",\"id\":\"637c814190d19c56defbe519\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_mode\",\"keyColumn\":\"[\\\"game_id\\\",\\\"mode\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70d\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_funnel\",\"keyColumn\":\"[\\\"game_id\\\",\\\"funnel_name\\\"]\",\"id\":\"637c3ed7e15f4d58ba093669\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_resource_item_type\",\"keyColumn\":\"[\\\"game_id\\\",\\\"flow_type\\\",\\\"currency\\\",\\\"item_type\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70f\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_action\",\"keyColumn\":\"[\\\"game_id\\\",\\\"a_to\\\",\\\"a_from\\\"]\",\"id\":\"641bbdba1e65304e34dc009a\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_ads_type\",\"keyColumn\":\"[\\\"game_id\\\",\\\"ads_type\\\"]\",\"id\":\"6361f9800b35c0bf3d57e706\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_inapp_product_id\",\"keyColumn\":\"[\\\"game_id\\\",\\\"product_id\\\"]\",\"id\":\"637c814c90d19c56defbe51a\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_level_difficulty\",\"keyColumn\":\"[\\\"game_id\\\",\\\"app_version\\\",\\\"level_difficulty\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70c\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_level\",\"keyColumn\":\"[\\\"game_id\\\",\\\"level\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70b\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_ads_where\",\"keyColumn\":\"[\\\"game_id\\\",\\\"ads_where\\\"]\",\"id\":\"6361f9800b35c0bf3d57e707\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_resource_currency\",\"keyColumn\":\"[\\\"game_id\\\",\\\"currency\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70e\",\"tableConfigName\":\"dwh_config_table\"}]\n";
         Dim[] dimList = gson.fromJson(jsonDim, Dim[].class);
@@ -48,7 +46,7 @@ public class RunnerService {
         }
     }
 
-    public static void createQuery(String factString, String schema, String day, String redshiftService) throws SQLException {
+    public void createQuery(String factString, String schema, String day) throws SQLException {
         System.out.println(factString+" "+day);
         Fact fact = factHashMap.get(factString);
         List<Dim> dims = new ArrayList<>();
@@ -77,31 +75,73 @@ public class RunnerService {
         String fact2TableQuery = QueryGenerateUtils.generateQueryForFact2Table(fact, schema, dimHashMap, day);
         List<String> dimQueries = QueryGenerateUtils.generateQueryForDimTables(dims, schema, fact.getRawTable(), fieldsMap);
         for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
-        if (redshiftService.equals("Ra3")) {
-            redshiftRA3Service.executeUpdate(fact1TableQuery);
-            for (String query : dimQueries){
-                redshiftRA3Service.executeUpdate(query);
-            }
-            redshiftRA3Service.executeUpdate(fact2TableQuery);
-            String q = "drop table " + schema + "." + factString + "_temp_1_" + day.replace("-", "_");
-            redshiftRA3Service.executeUpdate(q);
-            String j = "drop table " + schema + "." + factString + "_temp_2_" + day.replace("-", "_");
-            redshiftRA3Service.executeUpdate(j);
+        redshiftDC2Service.executeUpdate(fact1TableQuery);
+        for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
+        redshiftDC2Service.executeUpdate(fact2TableQuery);
+    }
+    public void comparePerformanceBetweenRa3AndDc2Weak() {
+        List<String>apiTable=new ArrayList<>(Arrays.asList("api_ads_log_raw_data","api_resource_log_raw_data","api_session_raw_data"
+        ,"api_level_log_raw_data", "api_retention_raw_data","api_funnel_raw_data"));
+        Map<String, List<String>> days = new HashMap<>();
+        days.put("api_ads_log_raw_data", Arrays.asList("2023-09-25", "2023-09-26", "2023-09-27", "2023-09-28", "2023-09-29", "2023-09-30", "2023-10-01"));
+        days.put("api_resource_log_raw_data", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+        days.put("api_session_raw_data", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+        days.put("api_level_log_raw_data", Arrays.asList("2023-10-01", "2023-10-03", "2023-10-02"));
+        days.put("api_retention_raw_data", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+        days.put("api_funnel_raw_data", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
+        List<Thread> dc2Threads = new ArrayList<>();
+        List<Thread> ra3Threads = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        for (int i = 0; i < 10; i++) {
+            String fact = apiTable.get(rand.nextInt(days.size()));
+            List<String> factDay = days.get(fact);
+            String day = factDay.get(rand.nextInt(factDay.size()));
+            if (visited.contains(fact + " " + day)) continue;
+            visited.add(fact + " " + day);
+            dc2Threads.add(new Thread(() -> {
+                try {
+                    createQuery(fact, DWH_TEST, day);
+                } catch (SQLException e) {
+                    throw new RedshiftException(e.getMessage());
+                }
+            }));
+            ra3Threads.add(new Thread(() -> {
+                try {
+                    createQuery(fact, DWH_TEST, day);
+                } catch (SQLException e) {
+                    throw new RedshiftException(e.getMessage());
+                }
+            }));
+        }
+        long startTime = System.currentTimeMillis();
+        for (Thread dc2Thread : dc2Threads) {
+            dc2Thread.start();
+        }
+        try {
+            for (Thread dc2Thread : dc2Threads) dc2Thread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        long endTime = System.currentTimeMillis();
+        long executionTime = endTime - startTime;
+        LOGGER.log(Level.INFO, "total runtime dc2: {0}", executionTime);
+
+        startTime = System.currentTimeMillis();
+        for (Thread ra3Thread : ra3Threads) {
+            ra3Thread.start();
         }
 
-
-         else {
-            redshiftDC2Service.executeUpdate(fact1TableQuery);
-            for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
-            redshiftDC2Service.executeUpdate(fact2TableQuery);
-            String q="drop table dwh_test."+factString+"_temp_1_"+day.replace("-","_");
-            redshiftDC2Service.executeUpdate(q);
-            String j="drop table dwh_test."+factString+"_temp_2_"+day.replace("-","_");
-            redshiftDC2Service.executeUpdate(j);
-         }
+        try {
+            for (Thread ra3Thread : ra3Threads) ra3Thread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        endTime = System.currentTimeMillis();
+        executionTime = endTime - startTime;
+        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
     }
 
-        public static void comparePerformanceBetweenRa3AndDc2() {
+    public void comparePerformanceBetweenRa3AndDc2() {
         Map<String, List<String>> days = new HashMap<>();
         days.put("fact_ads_view", Arrays.asList("2023-09-25", "2023-09-26", "2023-09-27", "2023-09-28", "2023-09-29", "2023-09-30", "2023-10-01"));
         days.put("fact_session_time", Arrays.asList("2023-10-02", "2023-10-03", "2023-10-04"));
@@ -120,14 +160,14 @@ public class RunnerService {
             visited.add(fact + " " + day);
             dc2Threads.add(new Thread(() -> {
                 try {
-                    createQuery(fact, DWH_TEST, day, "Dc2");
+                    createQuery(fact, DWH_TEST, day);
                 } catch (SQLException e) {
                     throw new RedshiftException(e.getMessage());
                 }
             }));
             ra3Threads.add(new Thread(() -> {
                 try {
-                    createQuery(fact, DWH_TEST, day, "Ra3");
+                    createQuery(fact, DWH_TEST, day);
                 } catch (SQLException e) {
                     throw new RedshiftException(e.getMessage());
                 }
@@ -195,11 +235,4 @@ public class RunnerService {
 //        long executionTime = endTime - startTime;
 //        LOGGER.log(Level.INFO, "total runtime ra3: {0}", executionTime);
 //    }
-    public static void main(String[] args) throws SQLException {
-        preRun();
-        comparePerformanceBetweenRa3AndDc2();
-    }
-    public void print() {
-        System.out.println("Runner run");
-    }
 }

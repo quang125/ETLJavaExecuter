@@ -1,4 +1,4 @@
-package com.example.querygenerate.service;
+package com.example.querygenerate.services;
 
 import com.example.querygenerate.data.Dim;
 import com.example.querygenerate.data.Fact;
@@ -23,10 +23,8 @@ public class CompareService {
     private static final RedshiftService redshiftDC2Service = new RedshiftService("jdbc:redshift://new-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "quangnn", "Yvx83kfRmHt42b6kqgM5gzjG6");
     //private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "admin", "mj4Yl9O37GuWxSwLz0Wjs3DJ7");
     private static final Logger LOGGER = Logger.getLogger(CompareService.class.getName());
-    private static final String DWH_TEST = "dwh_test";
-    private static final List<String> factTable = Arrays.asList("fact_ads_view", "fact_resource_log", "fact_action", "fact_retention", "fact_account_ads_view", "fact_session_time");
-    static Scanner sc = new Scanner(System.in);
-
+    private static final Map<String,List<String>> factTableDays = new HashMap<>();
+    private static final Map<String,List<String>> factTableFields = new HashMap<>();
     @PostConstruct
     public static void preRun() {
         Gson gson = new Gson();
@@ -42,9 +40,22 @@ public class CompareService {
             if (!fact.getTableName().contains("fact")) continue;
             factHashMap.put(fact.getTableName(), fact);
         }
+        List<String>days=new ArrayList<>(Arrays.asList("2023-10-02","2023-10-03","2023-10-04"));
+        factTableDays.put("fact_session_time",days);
+        factTableDays.put("fact_ads_view",days);
+        factTableDays.put("fact_resource_log",days);
+        factTableFields.put("fact_session_time",Arrays.asList("created_day","country","app_version","mode","level","account_id","sum_value","retention_day","time_id","install_day","session_id"));
+        factTableFields.put("fact_ads_view",Arrays.asList("created_day","country","app_version","level","ads_type","ads_where","sum_value","retention_day","time_id","install_day"));
+        factTableFields.put("fact_resource_log",Arrays.asList("created_day","country","app_version","level","sum_value","retention_day","time_id","resource_item_type","install_day"));
+        factTableFields.put("fact_level_daily_time_play",Arrays.asList("created_day","country","app_version","ab_testing_id","level_level","level_difficulty","level_status","count_value","sum_value","retention_day","time_id","install_day"));
+        factTableFields.put("fact_funnel",Arrays.asList("created_day","country","app_version","level","sum_value","retention_day","time_id","install_day","priority","action","funnel_id","funnel_day"));
+        factTableFields.put("fact_retention",Arrays.asList("created_day","country","app_version","level","sum_value","retention_day","time_id","day","install_day"));
+        factTableFields.put("fact_action", Arrays.asList("created_day","country","app_version","level","sum_value","retention_day","time_id","install_day","priority","a_id"));
+        factTableFields.put("fact_property",Arrays.asList("created_day","country","app_version","level","sum_value","retention_day","time_id","install_day","priority","p_name","p_value","account_id"));
+        factTableFields.put("fact_inapp", Arrays.asList("created_day","country","app_version","inapp_where","level","sum_value","retention_day","time_id","price","install_day","account_id","price_usd"));
     }
 
-    public boolean compareTemp(String factString, String schema, String day, String redshiftService) throws SQLException {
+    public boolean compareTemp1VsTemp3(String factString, String schema, String day, String redshiftService) throws SQLException {
         System.out.println(factString + " " + day);
         Fact fact = factHashMap.get(factString);
         List<Dim> dims = new ArrayList<>();
@@ -67,29 +78,43 @@ public class CompareService {
             }
         }
         String fact3TableQuery = QueryGenerateUtils.generateQueryForFact3Table(fact, schema, dimHashMap, day);
-        System.out.println(fact3TableQuery);
         redshiftDC2Service.executeUpdate(fact3TableQuery);
-        List<String> queries = QueryGenerateUtils.generateCompareCountQuery(fact, schema, dimHashMap, day);
+        List<String> queries = QueryGenerateUtils.generateCompareCountQueriesFact1AndFact2(fact, schema, dimHashMap, day);
+        boolean check=checkCountEqual(queries);
+        String q = "drop table " + schema + "." + factString + "_temp_3_" + day.replace("-", "_");
+        redshiftDC2Service.executeUpdate(q);
+        if (!check) {
+            LOGGER.log(Level.INFO, "different number of records at table {0}", "check fact 1 "+factString + "_" + day.replace("-", "_"));
+        }
+        LOGGER.log(Level.INFO, "same number of records at table {0}", "check fact 1 "+factString + "_" + day.replace("-", "_"));
+        return true;
+    }
+    public void compareTemp2vsRealFactTable() throws SQLException {
+        for(String fact:factTableFields.keySet()){
+            for(String day:factTableDays.get(fact)){
+                System.out.println(fact+" "+day);
+                List<String>queries=QueryGenerateUtils.generateCompareCountQueriesFact2AndFactReal(fact,"dwh_test",day,factTableFields.get(fact),"Ra3");
+                boolean check=checkCountEqual(queries);
+                if (!check) {
+                    LOGGER.log(Level.INFO, "different number of records at table {0}", "check fact 2 "+fact + "_" + day.replace("-", "_"));
+                }
+                else LOGGER.log(Level.INFO, "same number of records at table {0}", "check fact 2 "+fact + "_" + day.replace("-", "_"));
+            }
+        }
+    }
+
+    public static boolean checkCountEqual(List<String>queries) throws SQLException {
         Set<String> value = new HashSet<>();
         for (String query : queries) {
             System.out.println(query);
             System.out.println(redshiftDC2Service.executeCountSelect(query));
             value.add(redshiftDC2Service.executeCountSelect(query));
         }
-        String q = "drop table " + schema + "." + factString + "_temp_3_" + day.replace("-", "_");
-        redshiftDC2Service.executeUpdate(q);
+//        System.out.println(value);
         if (!(value.size() == 1)) {
-            LOGGER.log(Level.INFO, "different number of records at table {}", factString + "_" + day.replace("-", "_"));
+            return false;
         }
         return true;
     }
 
-    public void print() {
-        System.out.println("Compare run");
-    }
-
-//    public static void main(String[] args) throws SQLException {
-//        preRun();
-//        System.out.println(compareTemp(sc.next(),sc.next(),sc.next(),sc.next()));
-//    }
 }

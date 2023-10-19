@@ -1,6 +1,4 @@
-package com.example.querygenerate.service;
-
-import org.springframework.stereotype.Service;
+package com.example.querygenerate.services;
 
 import java.util.*;
 
@@ -14,20 +12,25 @@ public class TestLoadService {
 
     public static void stressTestRa3Dwh_1(){
         Random rand = new Random();
-        List<String> table = Arrays.asList("api_ads_log_raw_data_2023_09_25", "api_ads_log_raw_data_2023_10_02", "api_inapp_log_raw_data_2023_09_25",
-                "api_resource_log_raw_data_2023_08_14", "api_resource_log_raw_data_2023_08_21","api_resource_log_raw_data_2023_09_04");
+        List<String> table = Arrays.asList("api_ads_log_raw_data", "api_ads_log_raw_data", "api_inapp_log_raw_data",
+                "api_resource_log_raw_data", "api_resource_log_raw_data","api_resource_log_raw_data");
         List<Thread> ra3Threads = new ArrayList<>();
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 9; i++) {
             String fact = table.get(rand.nextInt(table.size()));
             ra3Threads.add(new Thread(() -> {
                 try {
                     while(true) {
-                        String query = "select * from dwh_falcon_1."+fact+" limit 100000";
-                        String query1 = "select * from dwh_falcon_1."+fact+" limit 100000";
-                        String query2 = "select * from dwh_falcon_1."+fact+" limit 100000";
-                        String query3 = "select * from dwh_falcon_1."+fact+" limit 100000";
-                        String query4 = "select * from dwh_falcon_1."+fact+" limit 100000";
-                        System.out.println(query1);
+                        String fact1 = table.get(rand.nextInt(table.size()));
+                        String query = "select  * from dwh_test."+fact1+" limit 100000";
+                        String fact2 = table.get(rand.nextInt(table.size()));
+                        String query1 = "select * from dwh_test."+fact2+" limit 100000";
+                        String fact3 = table.get(rand.nextInt(table.size()));
+                        String query2 = "select * from dwh_test."+fact3+" limit 100000";
+                        String fact4 = table.get(rand.nextInt(table.size()));
+                        String query3 = "select * from dwh_test."+fact4+" limit 100000";
+                        String fact5 = table.get(rand.nextInt(table.size()));
+                        String query4 = "select * from dwh_test."+fact5+" limit 100000";
+                        System.out.println(query);
                         redshiftRA3Service.executeSelect(query);
                         redshiftRA3Service.executeSelect(query1);
                         redshiftRA3Service.executeSelect(query2);
@@ -53,16 +56,20 @@ public class TestLoadService {
         List<String> table = Arrays.asList("api_ads_log_raw_data", "api_funnel_raw_data", "api_inapp_log_raw_data",
                 "api_level_log_raw_data", "api_property_raw_data","api_resource_log_raw_data");
         List<Thread> ra3Threads = new ArrayList<>();
-        for (int i = 0; i < 12; i++) {
-            String fact = table.get(rand.nextInt(table.size()));
+        for (int i = 0; i < 10; i++) {
             ra3Threads.add(new Thread(() -> {
                 try {
                     while(true) {
-                        String query = "select  * from dwh_test."+fact+" limit 1000000";
-                        String query1 = "select * from dwh_test."+fact+" limit 1000000";
-                        String query2 = "select * from dwh_test."+fact+" limit 1000000";
-                        String query3 = "select * from dwh_test."+fact+" limit 1000000";
-                        String query4 = "select * from dwh_test."+fact+" limit 1000000";
+                        String fact1 = table.get(rand.nextInt(table.size()));
+                        String query = "select  * from dwh_test."+fact1+" limit 400000";
+                        String fact2 = table.get(rand.nextInt(table.size()));
+                        String query1 = "select * from dwh_test."+fact2+" limit 400000";
+                        String fact3 = table.get(rand.nextInt(table.size()));
+                        String query2 = "select * from dwh_test."+fact3+" limit 400000";
+                        String fact4 = table.get(rand.nextInt(table.size()));
+                        String query3 = "select * from dwh_test."+fact4+" limit 400000";
+                        String fact5 = table.get(rand.nextInt(table.size()));
+                        String query4 = "select * from dwh_test."+fact5+" limit 400000";
                         System.out.println(query);
                         redshiftRA3Service.executeSelect(query);
                         redshiftRA3Service.executeSelect(query1);
@@ -83,8 +90,5 @@ public class TestLoadService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-    public static void main(String[] args) {
-        stressTestRa3Dwh_test();
     }
 }

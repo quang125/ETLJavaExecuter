@@ -43,7 +43,7 @@ public class QueryGenerateUtils {
         command1 = command1.replace("%s", schema);
         command1 = command1.replace("time_id = ?", "created_date_str = " + quotedDate);
         command1 = command1.replace("raw_data", "raw_data_" + day.replace("-", "_"));
-        return "Create Table " + schema + "." + fact.getTableName() + "_temp_1_" + reformatDay + " as (" + command + "\n union " + command1 + ")";
+        return "Create Table " + schema + "." + fact.getTableName() + "_temp_1_" + reformatDay + " as (" + command + "\n union all " + command1 + ")";
     }
 
     public static List<String> generateQueryForDimTables(List<Dim> dimList, String schema, String rawTable, Map<String, String> fieldsMap) {
@@ -170,7 +170,7 @@ public class QueryGenerateUtils {
         return "Select count(*) from " + schema + "." + table;
     }
 
-    public static List<String> generateCompareCountQuery(Fact fact, String schema, Map<String, Dim> dimMap, String day) {
+    public static List<String> generateCompareCountQueriesFact1AndFact2(Fact fact, String schema, Map<String, Dim> dimMap, String day) {
         List<String> queries = new ArrayList<>();
         StringBuilder query = new StringBuilder("select count(*) from (\n(\n");
         StringBuilder select = new StringBuilder("select distinct ");
@@ -200,6 +200,35 @@ public class QueryGenerateUtils {
         queries.add(("Select count(*) from (" + select + ") AS subquery;").replace("_temp_1", "_temp_3"));
         System.out.println(query);
         return queries;
+    }
+    public static List<String> generateCompareCountQueriesFact2AndFactReal(String factString, String schema, String day, List<String>fields, String redshiftService){
+        StringBuilder query1=new StringBuilder("select ");
+        for(int i=0;i<fields.size()-1;i++){
+            query1.append(fields.get(i)).append(", ");
+        }
+        query1.append(fields.get(fields.size()-1)+"\n");
+        query1.append("from "+schema+"."+factString);
+        StringBuilder query2 = new StringBuilder(query1);
+        query1.append("_temp_2_"+day.replace("-", "_"));
+        String quotedDate = "'" + day + "'";
+        query2.append("\nwhere created_day="+quotedDate);
+        query1.append("\n group by " );
+        query2.append("\n group by " );
+        for(int i=1;i<fields.size();i++){
+            query1.append(i).append(", ");
+            query2.append(i).append(", ");
+        }
+        query1.append(fields.size());
+        query2.append(fields.size());
+        StringBuilder query3=new StringBuilder(query1).append("\nunion\n").append(query2);
+        List<String> queries=new ArrayList<>();
+        queries.add("with cte as(\n"+query1+"\n) select count(*) from cte");
+        queries.add("with cte as(\n"+query2+"\n) select count(*) from cte");
+        queries.add("with cte as(\n"+query3+"\n) select count(*) from cte");
+        return queries;
+    }
+    public static String truncateData(String table, String schema){
+        return "delete from "+schema+"."+table;
     }
 }
 
