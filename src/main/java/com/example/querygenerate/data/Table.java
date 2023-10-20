@@ -1,4 +1,4 @@
-package com.example.querygenerate.data.json;
+package com.example.querygenerate.data;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,7 +8,7 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-public class TaskJson {
-    private String factTable;
+public class Table {
     private String schema;
+    private String factTable;
 }

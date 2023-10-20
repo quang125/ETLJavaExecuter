@@ -2,7 +2,6 @@ package com.example.querygenerate.services;
 
 import com.example.querygenerate.data.Dim;
 import com.example.querygenerate.data.Fact;
-import com.example.querygenerate.data.json.TaskJson;
 import com.example.querygenerate.exception.RedshiftException;
 import com.example.querygenerate.utils.JsonUtil;
 import com.example.querygenerate.utils.QueryGenerateUtils;
@@ -33,8 +32,6 @@ public class RunnerService {
 
     @PostConstruct
     public void preRun(){
-
-
         Gson gson = new Gson();
         String jsonDim = "[{\"tableName\":\"dim_country\",\"keyColumn\":\"[\\\"game_id\\\",\\\"country\\\"]\",\"id\":\"6361f9800b35c0bf3d57e709\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_app_version\",\"keyColumn\":\"[\\\"game_id\\\",\\\"app_version\\\"]\",\"id\":\"6361f9800b35c0bf3d57e708\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_ab_testing\",\"keyColumn\":\"[\\\"game_id\\\",\\\"ab_testing_id\\\",\\\"ab_testing_value\\\"]\",\"id\":\"6361f9800b35c0bf3d57e705\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_property\",\"keyColumn\":\"[\\\"game_id\\\",\\\"p_name\\\"]\",\"id\":\"641bbdcf1e65304e34dc009b\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_game\",\"keyColumn\":\"[\\\"game_id\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70a\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_inapp_where\",\"keyColumn\":\"[\\\"game_id\\\",\\\"inapp_where\\\"]\",\"id\":\"637c814190d19c56defbe519\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_mode\",\"keyColumn\":\"[\\\"game_id\\\",\\\"mode\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70d\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_funnel\",\"keyColumn\":\"[\\\"game_id\\\",\\\"funnel_name\\\"]\",\"id\":\"637c3ed7e15f4d58ba093669\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_resource_item_type\",\"keyColumn\":\"[\\\"game_id\\\",\\\"flow_type\\\",\\\"currency\\\",\\\"item_type\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70f\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_action\",\"keyColumn\":\"[\\\"game_id\\\",\\\"a_to\\\",\\\"a_from\\\"]\",\"id\":\"641bbdba1e65304e34dc009a\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_ads_type\",\"keyColumn\":\"[\\\"game_id\\\",\\\"ads_type\\\"]\",\"id\":\"6361f9800b35c0bf3d57e706\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_inapp_product_id\",\"keyColumn\":\"[\\\"game_id\\\",\\\"product_id\\\"]\",\"id\":\"637c814c90d19c56defbe51a\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_level_difficulty\",\"keyColumn\":\"[\\\"game_id\\\",\\\"app_version\\\",\\\"level_difficulty\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70c\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_level\",\"keyColumn\":\"[\\\"game_id\\\",\\\"level\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70b\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_ads_where\",\"keyColumn\":\"[\\\"game_id\\\",\\\"ads_where\\\"]\",\"id\":\"6361f9800b35c0bf3d57e707\",\"tableConfigName\":\"dwh_config_table\"},{\"tableName\":\"dim_resource_currency\",\"keyColumn\":\"[\\\"game_id\\\",\\\"currency\\\"]\",\"id\":\"6361f9800b35c0bf3d57e70e\",\"tableConfigName\":\"dwh_config_table\"}]\n";
         Dim[] dimList = gson.fromJson(jsonDim, Dim[].class);

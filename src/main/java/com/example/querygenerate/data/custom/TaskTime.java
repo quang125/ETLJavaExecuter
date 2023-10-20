@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TaskTime {
     private String task;
+    private String schema;
+    private String day;
     private LocalDateTime executeTime;
     private int delayTimeMinutes;
 }
