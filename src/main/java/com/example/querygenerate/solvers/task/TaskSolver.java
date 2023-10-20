@@ -9,4 +9,5 @@ public interface TaskSolver {
     List<String> readTask();
     void pushBackTask(String taskDetail);
     void logTaskError(String errorMessage);
+    void createTask(String task);
 }

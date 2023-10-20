@@ -1,24 +1,19 @@
 package com.example.querygenerate.services;
 
 import com.example.querygenerate.data.custom.TaskTime;
-import com.example.querygenerate.faction.variances.DelayAction;
-import com.example.querygenerate.solvers.task.FileTaskSolver;
-import jakarta.annotation.PostConstruct;
+import com.example.querygenerate.solvers.task.FileStringTaskSolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -27,38 +22,37 @@ import java.util.logging.Logger;
 @Component
 @RequiredArgsConstructor
 public class ScheduleService {
-    private static final List<String> factTables = Arrays.asList("fact_uninstall", "fact_level_daily_time_play", "fact_inapp", "fact_property", "fact_level_difficulty",
-            "fact_account_ads_view", "fact_session_time", "fact_resource_log", "fact_retention", "fact_ads_view", "fact_action", "fact_funnel");
+
     private static final Logger LOGGER = Logger.getLogger(ScheduleService.class.getName());
     private final RunnerService runnerService;
     private final CompareService compareService;
-    private final FileTaskSolver fileTaskSolver;
+    private final FileStringTaskSolver fileTaskSolver;
     private int successCount = 0;
     private final PriorityQueue<TaskTime> taskQueue = new PriorityQueue<>(
             Comparator.comparing(TaskTime::getExecuteTime).thenComparing(TaskTime::getDelayTimeMinutes)
     );
     @Scheduled(cron = "0 0 1 ? * MON", zone = "Asia/Ho_Chi_Minh")
     public void run() {
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
-        long startTime = System.currentTimeMillis();
-        for (final String fact : factTables) {
-            executor.execute(() -> {
-//                try {
-//                    runnerService.createQuery(fact, "dwh_test", LocalDate.now().toString(), "Dc2");
-//                } catch (SQLException e) {
-//                    throw new RuntimeException(e);
-//                }
-//                try {
-//                    compareService.compareTemp1VsTemp3(fact, "dwh_test", LocalDate.now().toString(), "Dc2");
-//                } catch (SQLException e) {
-//                    throw new RuntimeException(e);
-//                }
-            });
-        }
-        long endTime = System.currentTimeMillis();
-        LOGGER.log(Level.INFO, "total runtime ra3: {0}", endTime - startTime);
+//        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+//        long startTime = System.currentTimeMillis();
+//        for (final String fact : factTables) {
+//            executor.execute(() -> {
+////                try {
+////                    runnerService.createQuery(fact, "dwh_test", LocalDate.now().toString(), "Dc2");
+////                } catch (SQLException e) {
+////                    throw new RuntimeException(e);
+////                }
+////                try {
+////                    compareService.compareTemp1VsTemp3(fact, "dwh_test", LocalDate.now().toString(), "Dc2");
+////                } catch (SQLException e) {
+////                    throw new RuntimeException(e);
+////                }
+//            });
+//        }
+//        long endTime = System.currentTimeMillis();
+//        LOGGER.log(Level.INFO, "total runtime ra3: {0}", endTime - startTime);
     }
-    @PostConstruct
+    //@PostConstruct
     public void vc(){
         List<String> tasks=fileTaskSolver.readTask();
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
