@@ -25,19 +25,19 @@ public class FileStringTaskSolver implements TaskSolver {
     private static final String logErrorFile = "C:\\task\\log_string.txt";
 
     @Override
-    public List<String> readTask() {
-        List<String> tasks = new ArrayList<>();
+    public List<String> readTask(){
+        List<String> tasks=new ArrayList<>();
         try (FileReader fileReader = new FileReader(taskFile);
              BufferedReader bufferedReader = new BufferedReader(fileReader);
-             ) {
+             FileWriter writer = new FileWriter(currentTaskFile, true);) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-
+                tasks.add(line);
+                writer.write(line+" fail\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return tasks;
     }
 
