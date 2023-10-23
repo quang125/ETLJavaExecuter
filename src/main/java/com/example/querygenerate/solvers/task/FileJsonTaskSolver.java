@@ -31,7 +31,6 @@ public class FileJsonTaskSolver implements TaskSolver {
     public List<Task> readTask() {
         List<Task>tasks=new ArrayList<>();
         List<Table>tables=new ArrayList<>();
-        List<TaskStatus>taskStatusJsons=new ArrayList<>();
         try (Reader reader = new FileReader(taskFile);
         ) {
             Type listType = new TypeToken<List<Table>>() {}.getType();
@@ -39,41 +38,46 @@ public class FileJsonTaskSolver implements TaskSolver {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        List<TaskStatus> taskStatuses=new ArrayList<>();
+        List<TaskStatus> oldTask=readOldTask();
+        if(oldTask==null) oldTask=new ArrayList<>();
         for(Table t : tables){
-            Task task=new Task(t.getFactTable(),t.getSchema(),LocalDate.now().toString());
+            Task task=new Task(t.getFactTable().trim(),t.getSchema().trim(),LocalDate.now().minusDays(2).toString().trim());
             tasks.add(task);
-            taskStatuses.add(new TaskStatus(task,"fail"));
+            oldTask.add(new TaskStatus(task,"fail"));
         }
-        try (Writer writer = new FileWriter(currentTaskFile,true)) {
-            gson.toJson(taskStatuses, writer);
+        try (Writer writer = new FileWriter(currentTaskFile)) {
+            gson.toJson(oldTask, writer);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return tasks;
     }
 
-    @Override
-    public void pushBackTask(TaskStatus taskStatus) {
-        List<TaskStatus> taskStatuses = new ArrayList<>();
+    private List<TaskStatus> readOldTask() {
+        List<TaskStatus>oldTask=new ArrayList<>();
         try (Reader reader = new FileReader(currentTaskFile)) {
             Type listType = new TypeToken<List<TaskStatus>>() {}.getType();
-            taskStatuses = gson.fromJson(reader, listType);
+            oldTask = gson.fromJson(reader, listType);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return oldTask;
+    }
 
-        taskStatuses.add(taskStatus);
-
+    @Override
+    public synchronized void pushBackTask(TaskStatus taskStatus) {
+        List<TaskStatus>oldTask=readOldTask();
+        if(oldTask == null) oldTask=new ArrayList<>();
+        oldTask.add(taskStatus);
         try (Writer writer = new FileWriter(currentTaskFile)) {
-            gson.toJson(taskStatuses, writer);
+            gson.toJson(oldTask, writer);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public void logTaskError(LogError logError) {
+    public synchronized void logTaskError(LogError logError) {
         List<LogError> logErrors = new ArrayList<>();
         try (Reader reader = new FileReader(logErrorFile)) {
             Type listType = new TypeToken<List<LogError>>() {}.getType();
@@ -98,6 +102,7 @@ public class FileJsonTaskSolver implements TaskSolver {
         try (Reader reader = new FileReader(currentTaskFile)) {
             Type listType = new TypeToken<List<TaskStatus>>() {}.getType();
             taskStatuses = gson.fromJson(reader, listType);
+            if(taskStatuses==null) taskStatuses=new ArrayList<>();
         } catch (IOException e) {
             e.printStackTrace();
         }

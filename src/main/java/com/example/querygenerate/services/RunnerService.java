@@ -3,7 +3,6 @@ package com.example.querygenerate.services;
 import com.example.querygenerate.data.Dim;
 import com.example.querygenerate.data.Fact;
 import com.example.querygenerate.exception.RedshiftException;
-import com.example.querygenerate.utils.JsonUtil;
 import com.example.querygenerate.utils.QueryGenerateUtils;
 import com.google.gson.Gson;
 import jakarta.annotation.PostConstruct;
@@ -48,7 +47,7 @@ public class RunnerService {
     }
 
     public void createQuery(String factString, String schema, String day) throws SQLException {
-        System.out.println(factString+" "+day);
+        System.out.println(factString+" "+day+" "+schema);
         Fact fact = factHashMap.get(factString);
         List<Dim> dims = new ArrayList<>();
         for (String s : fact.getEtlMap().getDimFields().values()) {
@@ -74,11 +73,12 @@ public class RunnerService {
             fact1TableQuery = QueryGenerateUtils.generateQueryForFact1TableForTestSchema(fact, schema, day);
         else fact1TableQuery = QueryGenerateUtils.generateQueryForFact1TableForRealSchema(fact, schema, day);
         String fact2TableQuery = QueryGenerateUtils.generateQueryForFact2Table(fact, schema, dimHashMap, day);
-        List<String> dimQueries = QueryGenerateUtils.generateQueryForDimTables(dims, schema, fact.getRawTable(), fieldsMap);
-        for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
+        //List<String> dimQueries = QueryGenerateUtils.generateQueryForDimTables(dims, schema, fact.getRawTable(), fieldsMap);
         redshiftDC2Service.executeUpdate(fact1TableQuery);
-        for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
+        //for (String query : dimQueries) redshiftDC2Service.executeUpdate(query);
         redshiftDC2Service.executeUpdate(fact2TableQuery);
+//        System.out.println(fact1TableQuery);
+//        System.out.println(fact2TableQuery);
     }
     public void comparePerformanceBetweenRa3AndDc2Weak() {
         List<String>apiTable=new ArrayList<>(Arrays.asList("api_ads_log_raw_data","api_resource_log_raw_data","api_session_raw_data"

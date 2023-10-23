@@ -4,6 +4,7 @@ import com.example.querygenerate.data.Dim;
 import com.example.querygenerate.data.Fact;
 import com.example.querygenerate.services.RedshiftService;
 import com.google.gson.Gson;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.*;

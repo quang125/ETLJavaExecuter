@@ -35,15 +35,21 @@ public class QueryGenerateUtils {
         String reformatDay = day.replace("-", "_");
         LocalDate backupTarget = firstBackupDate.plusDays((dayDiff / 7 + 1) * 7);
         command = command.replace("time_id = ?", "created_date_str = " + quotedDate);
-        command = command.replace("raw_data", "raw_data_" + backupTarget.toString().replace("-", "_"));
-        if (dayDiff % 7 != 0) {
-            return "Create Table " + schema + "." + fact.getTableName() + "_temp_1_" + reformatDay + " as (" + command + ");";
-        }
         String command1 = fact.getEtlQueryCommand();
         command1 = command1.replace("%s", schema);
         command1 = command1.replace("time_id = ?", "created_date_str = " + quotedDate);
         command1 = command1.replace("raw_data", "raw_data_" + day.replace("-", "_"));
-        return "Create Table " + schema + "." + fact.getTableName() + "_temp_1_" + reformatDay + " as (" + command + "\n union all " + command1 + ")";
+        if(backupTarget.isAfter(LocalDate.now())){
+            if (dayDiff % 7 != 0) {
+                return "Create Table dwh_test" + "." + fact.getTableName() + "_temp_1_" + reformatDay + " as (" + command + ");";
+            }
+            return "Create Table dwh_test" + "." + fact.getTableName() + "_temp_1_" + reformatDay + " as (" + command + "\n union all " + command1 + ")";
+        }
+        command = command.replace("raw_data", "raw_data_" + backupTarget.toString().replace("-", "_"));
+        if (dayDiff % 7 != 0) {
+            return "Create Table dwh_test" + "." + fact.getTableName() + "_temp_1_" + reformatDay + " as (" + command + ");";
+        }
+        return "Create Table dwh_test" + "." + fact.getTableName() + "_temp_1_" + reformatDay + " as (" + command + "\n union all " + command1 + ")";
     }
 
     public static List<String> generateQueryForDimTables(List<Dim> dimList, String schema, String rawTable, Map<String, String> fieldsMap) {
@@ -101,7 +107,7 @@ public class QueryGenerateUtils {
     }
 
     public static String generateQueryForFact2Table(Fact fact, String schema, Map<String, Dim> dimMap, String day) {
-        StringBuilder query = new StringBuilder("create table " + schema + "." + fact.getTableName() + "_temp_2_" + day.replace("-", "_") + " as\n(\n  select ");
+        StringBuilder query = new StringBuilder("create table dwh_test"  + "." + fact.getTableName() + "_temp_2_" + day.replace("-", "_") + " as\n(\n  select ");
         Map<String, String> dimFields = fact.getEtlMap().getDimFields();
         List<String> dataFields = fact.getEtlMap().getDataFields();
         int count = 1;
@@ -113,7 +119,7 @@ public class QueryGenerateUtils {
             query.append("t.").append(dataFields.get(i));
             if (i < dataFields.size() - 1) query.append(", ");
         }
-        query.append("\nfrom ").append(schema).append(".").append(fact.getTableName()).append("_temp_1_").append(day.replace("-", "_")).append(" t");
+        query.append("\nfrom ").append("dwh_test").append(".").append(fact.getTableName()).append("_temp_1_").append(day.replace("-", "_")).append(" t");
         count = 1;
         for (Map.Entry<String, String> field : dimFields.entrySet()) {
             query.append("\njoin ").append(schema).append(".").append(field.getValue()).append(" d").append(count).append("\non ");
@@ -198,7 +204,6 @@ public class QueryGenerateUtils {
         query.append(")\n)");
         queries.add(query.toString());
         queries.add(("Select count(*) from (" + select + ") AS subquery;").replace("_temp_1", "_temp_3"));
-        System.out.println(query);
         return queries;
     }
     public static List<String> generateCompareCountQueriesFact2AndFactReal(String factString, String schema, String day, List<String>fields, String redshiftService){
