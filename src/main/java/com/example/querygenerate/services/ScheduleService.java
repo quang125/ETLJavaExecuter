@@ -10,6 +10,8 @@ import com.example.querygenerate.solvers.task.TaskSolver;
 import com.example.querygenerate.utils.QueryGenerateUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -34,6 +36,8 @@ public class ScheduleService implements InitializingBean {
     private final RunnerService runnerService;
     private final CompareService compareService;
     private final TaskFactory taskFactory;
+    private static final Logger logger = LoggerFactory.getLogger(ScheduleService.class);
+    private final TelegramBotService telegramBotService;
     private final PriorityQueue<TaskTime> taskQueue = new PriorityQueue<>(
             Comparator.comparing(TaskTime::getExecuteTime).thenComparing(TaskTime::getDelayTimeMinutes)
     );
@@ -55,11 +59,14 @@ public class ScheduleService implements InitializingBean {
     public Runnable createRunnable(TaskTime taskTime, String day, TaskSolver taskSolver) {
         return () -> {
             try {
+                telegramBotService.sendLogMessage("AWS Redshift: Create table "+taskTime.getSchema()+" "+taskTime.getTask()+" "+day+" success");
                 runnerService.createQuery(taskTime.getTask(),
                         taskTime.getSchema(), day);
                 taskSolver.pushBackTask(new TaskStatus(new Task(taskTime.getTask().trim(), taskTime.getSchema().trim(), day.trim()), "done"));
                 successCount += 1;
             } catch (SQLException e) {
+                telegramBotService.sendLogMessage(e.getMessage());
+                logger.error(e.getMessage(), e);
                 int currentDelay = taskTime.getDelayTimeMinutes();
                 taskQueue.offer(new TaskTime(taskTime.getTask(), taskTime.getSchema(), day, LocalDateTime.now().plusMinutes(currentDelay), (currentDelay == 0 ? 1 : currentDelay * 2)));
                 taskSolver.logTaskError(new LogError(e.getMessage()+" "+taskTime.getSchema()+" "+LocalDateTime.now()));
@@ -92,20 +99,22 @@ public class ScheduleService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws SQLException {
-        List<TaskStatus> taskStatuses = taskSolver.readUnDoneTask();
-        List<Task> undoneTasks = new ArrayList<>();
-        for (int i = taskStatuses.size() - 1; i >= 0; i--) {
-            String task = taskStatuses.get(i).getTaskJson().getSchema() + " " + taskStatuses.get(i).getTaskJson().getFactTable() + " " + taskStatuses.get(i).getTaskJson().getDay();
-            if (taskStatuses.get(i).getStatus().equals("done")) {
-                doneTask.add(task);
-            } else {
-                if (!doneTask.contains(task)) {
-                    undoneTasks.add(new Task(taskStatuses.get(i).getTaskJson().getFactTable(), taskStatuses.get(i).getTaskJson().getSchema(),
-                            taskStatuses.get(i).getTaskJson().getDay()));
-                    doneTask.add(task);
-                }
-            }
-        }
-        doTask(undoneTasks);
+        List<Task> tasks = taskSolver.readTask();
+        doTask(tasks);
+//        List<TaskStatus> taskStatuses = taskSolver.readUnDoneTask();
+//        List<Task> undoneTasks = new ArrayList<>();
+//        for (int i = taskStatuses.size() - 1; i >= 0; i--) {
+//            String task = taskStatuses.get(i).getTaskJson().getSchema() + " " + taskStatuses.get(i).getTaskJson().getFactTable() + " " + taskStatuses.get(i).getTaskJson().getDay();
+//            if (taskStatuses.get(i).getStatus().equals("done")) {
+//                doneTask.add(task);
+//            } else {
+//                if (!doneTask.contains(task)) {
+//                    undoneTasks.add(new Task(taskStatuses.get(i).getTaskJson().getFactTable(), taskStatuses.get(i).getTaskJson().getSchema(),
+//                            taskStatuses.get(i).getTaskJson().getDay()));
+//                    doneTask.add(task);
+//                }
+//            }
+//        }
+//        doTask(undoneTasks);
     }
 }

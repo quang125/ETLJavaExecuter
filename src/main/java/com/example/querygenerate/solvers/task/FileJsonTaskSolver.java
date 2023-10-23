@@ -41,7 +41,7 @@ public class FileJsonTaskSolver implements TaskSolver {
         List<TaskStatus> oldTask=readOldTask();
         if(oldTask==null) oldTask=new ArrayList<>();
         for(Table t : tables){
-            Task task=new Task(t.getFactTable().trim(),t.getSchema().trim(),LocalDate.now().minusDays(2).toString().trim());
+            Task task=new Task(t.getFactTable().trim(),t.getSchema().trim(),LocalDate.now().toString().trim());
             tasks.add(task);
             oldTask.add(new TaskStatus(task,"fail"));
         }
