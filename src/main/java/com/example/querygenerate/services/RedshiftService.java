@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * A class used to interact with redshift (could be used for other data sources too, but it hasn't been tested yet).
  *
- * @author LeeHuyyHoangg
+ * @author QuangNN
  */
 @SuppressWarnings("unused")
 public class RedshiftService {
