@@ -8,7 +8,7 @@ import java.util.*;
  */
 //@Service
 public class TestLoadService {
-    private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dc2-cluster-2.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "admin", "mj4Yl9O37GuWxSwLz0Wjs3DJ7");
+    private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dc2-cluster-2.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/***********", "admin", "***********************");
 
     public static void stressTestRa3Dwh_1(){
         Random rand = new Random();
