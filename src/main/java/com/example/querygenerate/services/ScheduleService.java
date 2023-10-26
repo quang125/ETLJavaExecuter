@@ -99,22 +99,20 @@ public class ScheduleService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws SQLException {
-        List<Task> tasks = taskSolver.readTask();
-        doTask(tasks);
-//        List<TaskStatus> taskStatuses = taskSolver.readUnDoneTask();
-//        List<Task> undoneTasks = new ArrayList<>();
-//        for (int i = taskStatuses.size() - 1; i >= 0; i--) {
-//            String task = taskStatuses.get(i).getTaskJson().getSchema() + " " + taskStatuses.get(i).getTaskJson().getFactTable() + " " + taskStatuses.get(i).getTaskJson().getDay();
-//            if (taskStatuses.get(i).getStatus().equals("done")) {
-//                doneTask.add(task);
-//            } else {
-//                if (!doneTask.contains(task)) {
-//                    undoneTasks.add(new Task(taskStatuses.get(i).getTaskJson().getFactTable(), taskStatuses.get(i).getTaskJson().getSchema(),
-//                            taskStatuses.get(i).getTaskJson().getDay()));
-//                    doneTask.add(task);
-//                }
-//            }
-//        }
-//        doTask(undoneTasks);
+       List<TaskStatus> taskStatuses = taskSolver.readUnDoneTask();
+       List<Task> undoneTasks = new ArrayList<>();
+       for (int i = taskStatuses.size() - 1; i >= 0; i--) {
+           String task = taskStatuses.get(i).getTaskJson().getSchema() + " " + taskStatuses.get(i).getTaskJson().getFactTable() + " " + taskStatuses.get(i).getTaskJson().getDay();
+           if (taskStatuses.get(i).getStatus().equals("done")) {
+               doneTask.add(task);
+           } else {
+               if (!doneTask.contains(task)) {
+                   undoneTasks.add(new Task(taskStatuses.get(i).getTaskJson().getFactTable(), taskStatuses.get(i).getTaskJson().getSchema(),
+                           taskStatuses.get(i).getTaskJson().getDay()));
+                   doneTask.add(task);
+               }
+           }
+       }
+       doTask(undoneTasks);
     }
 }
