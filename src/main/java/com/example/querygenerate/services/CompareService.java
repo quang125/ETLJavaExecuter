@@ -20,8 +20,8 @@ public class CompareService {
     private static final Map<String, Dim> dimHashMap = new HashMap<>();
     private static final Map<String, String> fieldsMap = new HashMap<>();
     private static final Map<String, Fact> factHashMap = new HashMap<>();
-    private static final RedshiftService redshiftDC2Service = new RedshiftService("jdbc:redshift://new-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "quangnn", "***********");
-    private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/dwh_games", "admin", "**********");
+    private static final RedshiftService redshiftDC2Service = new RedshiftService("jdbc:redshift://new-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/********", "quangnn", "***********");
+    private static final RedshiftService redshiftRA3Service = new RedshiftService("jdbc:redshift://test-dwh-cluster.cbyg0igfhhw3.us-east-1.redshift.amazonaws.com:5439/******", "admin", "**********");
     private static final Logger LOGGER = Logger.getLogger(CompareService.class.getName());
     private static final Map<String,List<String>> factTableDays = new HashMap<>();
     private static final Map<String,List<String>> factTableFields = new HashMap<>();
